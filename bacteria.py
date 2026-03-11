@@ -1,131 +1,73 @@
-class Bacteria:
+def calculate_deaths(self, env):
 
-    def __init__(self):
-        self.population = 1000
+    death_modifier = 1
+    deaths = self.population * self.base_death_rate
 
-        with open('population.txt',mode='w') as f:
-            f.write(str(self.population))
+    # --------------------
+    # TEMPERATURE EFFECT
+    # --------------------
+    temp = env.temperature
+    optimal_low = 35
+    optimal_high = 39
 
-        self.base_birth_rate = 0.05
-        self.base_death_rate = 0.01
+    if temp < optimal_low:
+        diff = optimal_low - temp
+    elif temp > optimal_high:
+        diff = temp - optimal_high
+    else:
+        diff = 0
 
-    def update(self, environment):
+    death_modifier += (diff / 5) * 0.5
 
-        births = self.calculate_births(environment)
-        deaths = self.calculate_deaths(environment)
 
-        self.population = max(0, int(self.population + births - deaths))
+    # --------------------
+    # pH EFFECT
+    # --------------------
+    ph = env.pH_level
+    ph_diff = abs(ph - 7)
 
-        with open('population.txt',mode='a') as f:
-            f.write('\n'+str(self.population))
+    # every 1 pH away adds stress
+    death_modifier += ph_diff * 0.4
 
-    def calculate_births(self, env):
+    # extreme pH still very dangerous
+    if ph <= 2 or ph >= 12:
+        death_modifier += 3
 
-        birth_modifier = 1
 
-        # --------------------
-        # TEMPERATURE EFFECT
-        # --------------------
-        temp = env.temperature
+    # --------------------
+    # HUMIDITY EFFECT
+    # --------------------
+    humidity = env.humidity
+    optimal_low = 40
+    optimal_high = 70
 
-        if 35 <= temp <= 39:  # Optimal
-            birth_modifier *= 1.3
-        elif 30 <= temp < 35 or 39 < temp <= 42:  # Stress
-            birth_modifier *= 0.6
-        else:  # Lethal
-            birth_modifier *= 0.1
+    if humidity < optimal_low:
+        diff = optimal_low - humidity
+    elif humidity > optimal_high:
+        diff = humidity - optimal_high
+    else:
+        diff = 0
 
-        # --------------------
-        # pH EFFECT
-        # --------------------
-        ph = env.pH_level
-        ph_diff = abs(ph - 7)
+    # every 10% away increases deaths
+    death_modifier += (diff / 10) * 0.3
 
-        if ph_diff <= 1:  # Optimal
-            birth_modifier *= 1.2
-        elif ph_diff <= 3:  # Stress
-            birth_modifier *= 0.5
-        else:  # Lethal
-            birth_modifier *= 0.05
 
-        # --------------------
-        # HUMIDITY EFFECT
-        # --------------------
-        humidity = env.humidity
+    # --------------------
+    # NUTRIENTS EFFECT
+    # --------------------
+    nutrients = env.nutrients
 
-        if 40 <= humidity <= 70:
-            birth_modifier *= 1.1
-        elif 25 <= humidity < 40:
-            birth_modifier *= 0.7
-        else:
-            birth_modifier *= 0.3
+    # ideal nutrients = 8
+    nutrient_diff = abs(nutrients - 8)
 
-        # --------------------
-        # NUTRIENTS EFFECT
-        # --------------------
-        nutrients = env.nutrients
+    death_modifier += nutrient_diff * 0.35
 
-        if nutrients >= 7:
-            birth_modifier *= 1.2
-        elif 3 <= nutrients < 7:
-            birth_modifier *= 0.7
-        else:
-            birth_modifier *= 0.2
 
-        # Logistic Growth Limit
-        carrying_capacity = 5000
-        logistic_factor = 1 - (self.population / carrying_capacity)
+    # --------------------
+    # Waste buildup (overcrowding stress)
+    # --------------------
+    waste_level = (self.population / 8000)
+    death_modifier += waste_level
 
-        return self.population * self.base_birth_rate * birth_modifier * logistic_factor
 
-    def calculate_deaths(self, env):
-
-        death_modifier = 1
-        deaths = self.population * self.base_death_rate
-
-        # --------------------
-        # TEMPERATURE EFFECT
-        # --------------------
-        temp = env.temperature
-
-        if temp < 25 or temp > 45:  # Lethal
-            death_modifier += 3.0
-        elif temp < 30 or temp > 42:  # Stress
-            death_modifier += 0.8
-
-        # --------------------
-        # pH EFFECT
-        # --------------------
-        ph = env.pH_level
-        ph_diff = abs(ph - 7)
-
-        if ph <= 2 or ph >= 12:  # Extreme lethal
-            death_modifier += 5.0
-        elif ph_diff > 3:
-            death_modifier += 1.5
-
-        # --------------------
-        # HUMIDITY EFFECT
-        # --------------------
-        humidity = env.humidity
-
-        if humidity < 20:
-            death_modifier += 1.5
-        elif humidity < 35:
-            death_modifier += 0.5
-
-        # --------------------
-        # NUTRIENTS EFFECT
-        # --------------------
-        nutrients = env.nutrients
-
-        if nutrients <= 2:
-            death_modifier += 2.0
-        elif nutrients <= 4:
-            death_modifier += 0.7
-
-        # Waste buildup (overcrowding stress)
-        waste_level = (self.population / 8000)
-        death_modifier += waste_level
-
-        return deaths * death_modifier
+    return deaths * death_modifier
