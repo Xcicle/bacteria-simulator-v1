@@ -1,73 +1,89 @@
-def calculate_deaths(self, env):
+class Bacteria:
 
-    death_modifier = 1
-    deaths = self.population * self.base_death_rate
+    def __init__(self):
+        self.population = 1000
 
-    # --------------------
-    # TEMPERATURE EFFECT
-    # --------------------
-    temp = env.temperature
-    optimal_low = 35
-    optimal_high = 39
+        with open('population.txt',mode='w') as f:
+            f.write(str(self.population))
 
-    if temp < optimal_low:
-        diff = optimal_low - temp
-    elif temp > optimal_high:
-        diff = temp - optimal_high
-    else:
-        diff = 0
+        self.base_birth_rate = 0.05
+        self.base_death_rate = 0.01
 
-    death_modifier += (diff / 5) * 0.5
+    def update(self, environment):
 
+        births = self.calculate_births(environment)
+        deaths = self.calculate_deaths(environment)
 
-    # --------------------
-    # pH EFFECT
-    # --------------------
-    ph = env.pH_level
-    ph_diff = abs(ph - 7)
+        self.population = max(0, int(self.population + births - deaths))
 
-    # every 1 pH away adds stress
-    death_modifier += ph_diff * 0.4
+        with open('population.txt',mode='a') as f:
+            f.write('\n'+str(self.population))
 
-    # extreme pH still very dangerous
-    if ph <= 2 or ph >= 12:
-        death_modifier += 3
+    def calculate_deaths(self, env):
 
+        death_modifier = 1
+        deaths = self.population * self.base_death_rate
 
-    # --------------------
-    # HUMIDITY EFFECT
-    # --------------------
-    humidity = env.humidity
-    optimal_low = 40
-    optimal_high = 70
+        # --------------------
+        # TEMPERATURE EFFECT
+        # --------------------
+        temp = env.temperature
+        optimal_low = 35
+        optimal_high = 39
 
-    if humidity < optimal_low:
-        diff = optimal_low - humidity
-    elif humidity > optimal_high:
-        diff = humidity - optimal_high
-    else:
-        diff = 0
+        if temp < optimal_low:
+            diff = optimal_low - temp
+        elif temp > optimal_high:
+            diff = temp - optimal_high
+        else:
+            diff = 0
 
-    # every 10% away increases deaths
-    death_modifier += (diff / 10) * 0.3
+        death_modifier += (diff / 5) * 0.5
 
+        # --------------------
+        # pH EFFECT
+        # --------------------
+        ph = env.pH_level
+        ph_diff = abs(ph - 7)
 
-    # --------------------
-    # NUTRIENTS EFFECT
-    # --------------------
-    nutrients = env.nutrients
+        # every 1 pH away adds stress
+        death_modifier += ph_diff * 0.4
 
-    # ideal nutrients = 8
-    nutrient_diff = abs(nutrients - 8)
+        # extreme pH still very dangerous
+        if ph <= 2 or ph >= 12:
+            death_modifier += 3
 
-    death_modifier += nutrient_diff * 0.35
+        # --------------------
+        # HUMIDITY EFFECT
+        # --------------------
+        humidity = env.humidity
+        optimal_low = 40
+        optimal_high = 70
 
+        if humidity < optimal_low:
+            diff = optimal_low - humidity
+        elif humidity > optimal_high:
+            diff = humidity - optimal_high
+        else:
+            diff = 0
 
-    # --------------------
-    # Waste buildup (overcrowding stress)
-    # --------------------
-    waste_level = (self.population / 8000)
-    death_modifier += waste_level
+        # every 10% away increases deaths
+        death_modifier += (diff / 10) * 0.3
 
+        # --------------------
+        # NUTRIENTS EFFECT
+        # --------------------
+        nutrients = env.nutrients
 
-    return deaths * death_modifier
+        # ideal nutrients = 8
+        nutrient_diff = abs(nutrients - 8)
+
+        death_modifier += nutrient_diff * 0.35
+
+        # --------------------
+        # Waste buildup (overcrowding stress)
+        # --------------------
+        waste_level = (self.population / 8000)
+        death_modifier += waste_level
+
+        return deaths * death_modifier
