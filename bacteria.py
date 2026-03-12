@@ -8,6 +8,7 @@ class Bacteria:
 
         self.base_birth_rate = 0.05
         self.base_death_rate = 0.01
+        self.carrying_capacity = 5000
 
     def update(self, environment):
 
@@ -22,7 +23,9 @@ class Bacteria:
     def calculate_births(self, env):
 
         birth_modifier = 1
-        # -------------------- # TEMPERATURE EFFECT # --------------------
+
+        # -------------------- # TEMPERATURE EFFECT # -------------------- #
+
         temp = env.temperature
         if 35 <= temp <= 39:  # Optimal
             birth_modifier *= 1.3
@@ -30,17 +33,20 @@ class Bacteria:
             birth_modifier *= 0.6
         else:  # Lethal
             birth_modifier *= 0.1
-        # -------------------- # pH EFFECT # --------------------
+
+        # -------------------- # pH EFFECT # -------------------- #
+
         ph = env.pH_level
         ph_diff = abs(ph - 7)
-        if ph_diff <= 1:  #
-            Optimal
+        if ph_diff <= 1:  # Optimal
             birth_modifier *= 1.2
         elif ph_diff <= 3:  # Stress
             birth_modifier *= 0.5
         else:  # Lethal
             birth_modifier *= 0.05
-        # -------------------- # HUMIDITY EFFECT # --------------------
+
+        # -------------------- # HUMIDITY EFFECT # -------------------- #
+
         humidity = env.humidity
         if 40 <= humidity <= 70:
             birth_modifier *= 1.1
@@ -48,7 +54,9 @@ class Bacteria:
             birth_modifier *= 0.7
         else:
             birth_modifier *= 0.3
-        # -------------------- # NUTRIENTS EFFECT # --------------------
+
+        # -------------------- # NUTRIENTS EFFECT # -------------------- #
+
         nutrients = env.nutrients
         if nutrients >= 7:
             birth_modifier *= 1.2
@@ -56,9 +64,11 @@ class Bacteria:
             birth_modifier *= 0.7
         else:
             birth_modifier *= 0.2
+
         # Logistic Growth Limit
-        carrying_capacity = 5000
-        logistic_factor = 1 - (self.population / carrying_capacity)
+
+        logistic_factor = 1 - (self.population / self.carrying_capacity)
+
         return self.population * self.base_birth_rate * birth_modifier * logistic_factor
 
     def calculate_deaths(self, env):
@@ -66,9 +76,8 @@ class Bacteria:
         death_modifier = 1
         deaths = self.population * self.base_death_rate
 
-        # --------------------
-        # TEMPERATURE EFFECT
-        # --------------------
+        # -------------------- # TEMPERATURE EFFECT # -------------------- #
+
         temp = env.temperature
         optimal_low = 35
         optimal_high = 39
@@ -82,9 +91,8 @@ class Bacteria:
 
         death_modifier += (diff / 5) * 0.5
 
-        # --------------------
-        # pH EFFECT
-        # --------------------
+        # -------------------- # pH EFFECT # -------------------- #
+
         ph = env.pH_level
         ph_diff = abs(ph - 7)
 
@@ -95,9 +103,7 @@ class Bacteria:
         if ph <= 2 or ph >= 12:
             death_modifier += 3
 
-        # --------------------
-        # HUMIDITY EFFECT
-        # --------------------
+        # -------------------- # HUMIDITY EFFECT # -------------------- #
         humidity = env.humidity
         optimal_low = 40
         optimal_high = 70
@@ -112,9 +118,8 @@ class Bacteria:
         # every 10% away increases deaths
         death_modifier += (diff / 10) * 0.3
 
-        # --------------------
-        # NUTRIENTS EFFECT
-        # --------------------
+        # -------------------- # NUTRIENTS EFFECT # -------------------- #
+
         nutrients = env.nutrients
 
         # ideal nutrients = 8
@@ -122,9 +127,8 @@ class Bacteria:
 
         death_modifier += nutrient_diff * 0.35
 
-        # --------------------
-        # Waste buildup (overcrowding stress)
-        # --------------------
+        # -------------------- # Waste buildup (overcrowding stress) # -------------------- #
+
         waste_level = (self.population / 8000)
         death_modifier += waste_level
 
